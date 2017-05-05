@@ -44,7 +44,7 @@ class Transaction(BitcoinEncoding):
     raw format at https://en.bitcoin.it/wiki/Transactions. """
     _nullprev = b'\0' * 32
 
-    def __init__(self, raw=None, fees=None, disassemble=False, pos=False, messages=False):
+    def __init__(self, raw=None, fees=None, disassemble=False, pos=False, messages=False, txid=None):
         # raw transaction data in byte format
         if raw:
             if not isinstance(raw, (bytearray, newbytes.newbytes)):
@@ -65,19 +65,22 @@ class Transaction(BitcoinEncoding):
         # integer value, not encoded in the pack but for utility
         self.fees = fees
         self.version = None
+        self._txid = txid
         # stored as le bytes
         self._hash = None
         self.transaction_message = b"" if messages else None
         if disassemble:
             self.disassemble()
 
-    def disassemble(self, raw=None, dump_raw=False, fees=None):
+    def disassemble(self, raw=None, dump_raw=False, fees=None, txid=None):
         """ Unpacks a raw transaction into its object components. If raw
         is passed here it will set the raw contents of the object before
         disassembly. Dump raw will mark the raw data for garbage collection
         to save memory. """
         if fees:
             self.fees = fees
+        if txid:
+            self._txid = txid
         if raw:
             self._raw = bytes(raw)
         data = self._raw
@@ -209,6 +212,25 @@ class Transaction(BitcoinEncoding):
     def behexhash(self):
         return hexlify(self.hash[::-1])
 
+    @property
+    def txid(self):
+        """ Compute the hash of the transaction when needed """
+        if self._txid is None:
+            self._txid = self.hash
+        return self._txid
+
+    @property
+    def betxid(self):
+        return self.txid[::-1]
+
+    @property
+    def lehextxid(self):
+        return hexlify(self.txid)
+
+    @property
+    def behextxid(self):
+        return hexlify(self.txid[::-1])
+
     def __hash__(self):
         return self.funpack('i', self.hash)
 
@@ -223,4 +245,5 @@ class Transaction(BitcoinEncoding):
                 'data': hexlify(self._raw),
                 'locktime': self.locktime,
                 'version': self.version,
-                'hash': self.lehexhash}
+                'hash': self.lehexhash,
+                'txid': self.lehextxid}

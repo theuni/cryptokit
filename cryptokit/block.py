@@ -27,7 +27,7 @@ def merkleroot(iterator, be=False, hashes=False):
     use the list in place, but thats a future job... """
     # get the hashes of all the transactions
     if not hashes:
-        h_list = [t.behash for t in iterator]
+        h_list = [t.betxid for t in iterator]
     else:
         h_list = iterator
 
@@ -54,7 +54,7 @@ def merklebranch(iterator, be=True, hashes=False):
 
     # put a placeholder in our level zero that pretends to be the coinbase
     if not hashes:
-        h_list = [None] + [t.behash for t in iterator]
+        h_list = [None] + [t.betxid for t in iterator]
     else:
         h_list = [None] + list(iterator)
     branch = []
@@ -75,7 +75,7 @@ def from_merklebranch(branch_list, coinbase, be=False):
     branch_list is a list of little endian byte arrays of hash values, as is
     returned by merklebranch by default. Coinbase is expected to be a
     Transaction object. """
-    root = coinbase.behash
+    root = coinbase.betxid
     for node in branch_list:
         root = sha256(sha256(root + node).digest()).digest()
 
